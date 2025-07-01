@@ -1,7 +1,6 @@
 import type { ApiKeyWithRawValue } from '@n8n/api-types';
 import { testDb } from '@n8n/backend-test-utils';
 import { randomValidPassword } from '@n8n/backend-test-utils';
-import { mockInstance } from '@n8n/backend-test-utils';
 import { GlobalConfig } from '@n8n/config';
 import type { User } from '@n8n/db';
 import { ApiKeyRepository } from '@n8n/db';
@@ -22,6 +21,7 @@ import * as utils from './shared/utils/';
 
 const testServer = utils.setupTestServer({ endpointGroups: ['apiKeys'] });
 let publicApiKeyService: PublicApiKeyService;
+let globalConfig: GlobalConfig;
 const license = mock<License>();
 
 beforeAll(() => {
@@ -30,7 +30,8 @@ beforeAll(() => {
 
 beforeEach(async () => {
 	await testDb.truncate(['User']);
-	mockInstance(GlobalConfig, { publicApi: { disabled: false } });
+	globalConfig = Container.get(GlobalConfig);
+	globalConfig.publicApi.disabled = false;
 });
 
 describe('When public API is disabled', () => {
@@ -41,7 +42,7 @@ describe('When public API is disabled', () => {
 		owner = await createOwnerWithApiKey();
 
 		authAgent = testServer.authAgentFor(owner);
-		mockInstance(GlobalConfig, { publicApi: { disabled: true } });
+		globalConfig.publicApi.disabled = true;
 	});
 
 	test('POST /api-keys should 404', async () => {
